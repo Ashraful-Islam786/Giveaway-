@@ -2,204 +2,107 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>SAS4 Neon Giveaway</title>
-
+<title>SAS4 Giveaway</title>
 <style>
-/* 🌈 Animated background */
-body {
-  margin: 0;
-  font-family: Arial;
-  text-align: center;
-  color: #fff;
-  background: linear-gradient(-45deg, #ff00cc, #3333ff, #00ffcc, #ffcc00);
-  background-size: 400% 400%;
-  animation: bg 10s ease infinite;
-}
-
-@keyframes bg {
-  0% {background-position:0% 50%;}
-  50% {background-position:100% 50%;}
-  100% {background-position:0% 50%;}
-}
-
-.container {
-  background: rgba(0,0,0,0.6);
-  padding: 20px;
-  border-radius: 15px;
-  max-width: 650px;
-  margin: 40px auto;
-  box-shadow: 0 0 25px #00ffff;
-}
-
-/* ✨ Inputs */
-input, textarea {
-  width: 80%;
-  padding: 12px;
-  margin: 8px;
-  border: none;
-  outline: none;
-  border-radius: 10px;
-  background: #111;
-  color: #0ff;
-  box-shadow: 0 0 10px #0ff;
-}
-
-/* 🔥 Buttons */
-button {
-  padding: 12px 18px;
-  margin: 8px;
-  cursor: pointer;
-  border: none;
-  border-radius: 10px;
-  background: #ff00cc;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 0 15px #ff00cc;
-  transition: 0.2s;
-}
-
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 25px #00ffff;
-}
-
-/* 🎡 Wheel */
-#wheel {
-  width: 220px;
-  height: 220px;
-  margin: 20px auto;
-  border-radius: 50%;
-  border: 6px solid #0ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background: rgba(0,0,0,0.5);
-  box-shadow: 0 0 25px #0ff, 0 0 50px #ff00cc;
-  transition: transform 3s ease-out;
-  color: #fff;
-}
-
-/* lists */
-ul, ol {
-  text-align: left;
-  max-width: 80%;
-  margin: auto;
-}
-
-h1 {
-  text-shadow: 0 0 10px #fff, 0 0 20px #ff00cc;
-}
-
-#adminPanel {
-  display: none;
-  margin-top: 15px;
-}
+body{font-family:Arial;text-align:center;padding:20px;background:linear-gradient(-45deg,#ff00cc,#3333ff,#00ffcc,#ffcc00);background-size:400% 400%;animation:bg 10s ease infinite;color:white;}
+@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.container{max-width:700px;margin:auto;padding:20px;background:rgba(0,0,0,.6);border-radius:16px}
+input,textarea{width:80%;padding:12px;margin:8px;border-radius:10px}
+button{padding:12px 18px;margin:8px}
+#wheel{width:220px;height:220px;border-radius:50%;border:6px solid cyan;display:flex;align-items:center;justify-content:center;margin:20px auto;transition:transform 3s}
+#adminPanel{display:none}
+#adminEntries{display:none;text-align:left}
 </style>
 </head>
-
 <body>
-
 <div class="container">
-<h1>🔥 SAS4 NEON GIVEAWAY 🔥</h1>
-
-<input id="name" placeholder="Messenger username"><br>
+<h1>SAS4 GIVEAWAY</h1>
+<input id="name" placeholder="Messenger name">
 <textarea id="comment" placeholder="Comment"></textarea><br>
-
 <button onclick="addEntry()">Submit Entry</button>
-
 <div id="wheel">SPIN</div>
-
-<h3>Admin Access</h3>
-<input type="password" id="adminPass" placeholder="Enter admin password">
+<h3>Admin Login</h3>
+<input type="password" id="adminPass" placeholder="Admin password">
 <button onclick="loginAdmin()">Unlock Admin</button>
-
 <div id="adminPanel">
-  <button onclick="pickWinner()">🎡 Spin & Pick Winner</button>
+<button onclick="pickWinner()">Spin Winner</button>
+<h3>All Entries (Admin Only)</h3>
+<ul id="adminEntries"></ul>
 </div>
-
-<h3>Entries</h3>
-<ul id="entries"></ul>
-
-<h3>Winners (max 15)</h3>
+<h3>Winners</h3>
 <ol id="winners"></ol>
 </div>
 
-<script>
-let entries = JSON.parse(localStorage.getItem("entries")) || [];
-let winners = JSON.parse(localStorage.getItem("winners")) || [];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const ADMIN_PASSWORD = "12345";
+const firebaseConfig={
+apiKey:"AIzaSyBiXmdYtvLLXkJV7-BqNi6DWb1PHichHLg",
+authDomain:"giveaway-dafa3.firebaseapp.com",
+projectId:"giveaway-dafa3",
+storageBucket:"giveaway-dafa3.firebasestorage.app",
+messagingSenderId:"727523507923",
+appId:"1:727523507923:web:b61395320e2b0860841e26"
+};
 
-function saveData(){
-  localStorage.setItem("entries", JSON.stringify(entries));
-  localStorage.setItem("winners", JSON.stringify(winners));
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const ADMIN_PASSWORD="77440";
+
+window.addEntry=async function(){
+let name=document.getElementById('name').value.trim();
+let comment=document.getElementById('comment').value.trim();
+if(!name||!comment)return alert('Fill both');
+await addDoc(collection(db,'entries'),{name,comment,time:Date.now()});
+alert('Entry submitted');
+document.getElementById('name').value='';
+document.getElementById('comment').value='';
 }
 
-function addEntry(){
-  let n = document.getElementById('name').value.trim();
-  let c = document.getElementById('comment').value.trim();
-
-  if(!n || !c) return alert("Fill both fields");
-
-  if(entries.find(x => x.name.toLowerCase() === n.toLowerCase()))
-    return alert("Already entered");
-
-  entries.push({name:n, comment:c});
-  saveData();
-  render();
-
-  document.getElementById('name').value = "";
-  document.getElementById('comment').value = "";
+window.loginAdmin=async function(){
+let p=document.getElementById('adminPass').value;
+if(p!==ADMIN_PASSWORD){alert('Wrong password');return;}
+document.getElementById('adminPanel').style.display='block';
+loadEntries();
+loadWinners();
 }
 
-function loginAdmin(){
-  let pass = document.getElementById("adminPass").value;
-
-  if(pass === ADMIN_PASSWORD){
-    document.getElementById("adminPanel").style.display = "block";
-    alert("Admin unlocked");
-  } else {
-    alert("Wrong password");
-  }
+async function loadEntries(){
+let snap=await getDocs(collection(db,'entries'));
+let html='';
+snap.forEach(doc=>{
+let e=doc.data();
+html+=`<li>${e.name} - ${e.comment}</li>`;
+});
+document.getElementById('adminEntries').style.display='block';
+document.getElementById('adminEntries').innerHTML=html;
 }
 
-function render(){
-  document.getElementById('entries').innerHTML =
-    entries
-    .filter(e => !winners.some(w => w.name === e.name))
-    .map(e => `<li>✨ <b>${e.name}</b> — ${e.comment}</li>`)
-    .join("");
-
-  document.getElementById('winners').innerHTML =
-    winners.map(w => `<li>🏆 <b>${w.name}</b> — ${w.comment}</li>`)
-    .join("");
+async function loadWinners(){
+let snap=await getDocs(collection(db,'winners'));
+let html='';
+snap.forEach(doc=>{
+let w=doc.data();
+html+=`<li>${w.name}</li>`;
+});
+document.getElementById('winners').innerHTML=html;
 }
 
-function pickWinner(){
-  let pool = entries.filter(e => !winners.some(w => w.name === e.name));
-
-  if(pool.length === 0) return alert("No entries left");
-  if(winners.length >= 15) return alert("15 winners already selected");
-
-  let wheel = document.getElementById("wheel");
-
-  let spin = 1800 + Math.floor(Math.random() * 360);
-  wheel.style.transform = `rotate(${spin}deg)`;
-
-  setTimeout(() => {
-    let pick = pool[Math.floor(Math.random() * pool.length)];
-    winners.push(pick);
-
-    wheel.innerHTML = "🏆 WINNER:<br>" + pick.name;
-
-    saveData();
-    render();
-  }, 3000);
+window.pickWinner=async function(){
+let snap=await getDocs(collection(db,'entries'));
+let pool=[];
+snap.forEach(d=>pool.push(d.data()));
+if(pool.length===0){alert('No entries');return;}
+let pick=pool[Math.floor(Math.random()*pool.length)];
+let wheel=document.getElementById('wheel');
+wheel.style.transform=`rotate(${1800+Math.random()*360}deg)`;
+setTimeout(async()=>{
+await addDoc(collection(db,'winners'),{name:pick.name});
+wheel.innerHTML='WINNER<br>'+pick.name;
+loadWinners();
+},3000);
 }
-
-render();
 </script>
-
 </body>
 </html>
