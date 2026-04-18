@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SAS4 Giveaway</title>
+<style>
+body{font-family:Arial;padding:20px;text-align:center}
+input,textarea{width:80%;padding:10px;margin:8px}
+button{padding:12px 20px;margin:8px}
+#wheel{width:220px;height:220px;border:8px solid #333;border-radius:50%;margin:20px auto;display:flex;align-items:center;justify-content:center;transition:transform 3s}
+</style>
+</head>
+<body>
+<h1>SAS4 Giveaway</h1>
+<input id="name" placeholder="Messenger username or nickname"><br>
+<textarea id="comment" placeholder="Comment"></textarea><br>
+<button onclick="addEntry()">Submit Entry</button>
+<button onclick="pickWinner()">Spin & Pick Winner</button>
+<div id="wheel">Wheel</div>
+<h3>Entries</h3>
+<ul id="entries"></ul>
+<h3>Winners (up to 15)</h3>
+<ol id="winners"></ol>
+<script>
+let entries=[];
+let winners=[];
+function addEntry(){
+ let n=document.getElementById('name').value.trim();
+ let c=document.getElementById('comment').value.trim();
+ if(!n||!c)return alert('Fill both');
+ if(entries.find(x=>x.name.toLowerCase()==n.toLowerCase())) return alert('Duplicate blocked');
+ entries.push({name:n,comment:c});
+ render();
+ document.getElementById('name').value='';
+ document.getElementById('comment').value='';
+}
+function render(){
+ document.getElementById('entries').innerHTML=entries.filter(e=>!winners.find(w=>w.name==e.name)).map(e=>'<li>'+e.name+' - '+e.comment+'</li>').join('');
+ document.getElementById('winners').innerHTML=winners.map(w=>'<li>'+w.name+' - '+w.comment+'</li>').join('');
+}
+function pickWinner(){
+ let pool=entries.filter(e=>!winners.find(w=>w.name==e.name));
+ if(pool.length==0||winners.length>=15) return alert('Done');
+ let wheel=document.getElementById('wheel');
+ wheel.style.transform='rotate('+(1440+Math.random()*1440)+'deg)';
+ setTimeout(()=>{
+  let pick=pool[Math.floor(Math.random()*pool.length)];
+  winners.push(pick);
+  wheel.innerHTML='Winner:<br>'+pick.name;
+  render();
+ },3000);
+}
+</script>
+</body>
+</html>
