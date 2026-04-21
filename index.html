@@ -26,6 +26,7 @@ button{padding:12px 18px;margin:8px}
 <button onclick="loginAdmin()">Unlock Admin</button>
 <div id="adminPanel">
 <button onclick="pickWinner()">Spin Winner</button>
+<button onclick="clearWinners()">Clear Winners List</button>
 <h3>All Entries (Admin Only)</h3>
 <ul id="adminEntries"></ul>
 </div>
@@ -87,6 +88,15 @@ let w=doc.data();
 html+=`<li>${w.name}</li>`;
 });
 document.getElementById('winners').innerHTML=html;
+}
+
+window.clearWinners=async function(){
+if(!confirm('Delete winners list and start fresh?')) return;
+const { getDocs, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+let snap=await getDocs(collection(db,'winners'));
+for (const d of snap.docs){ await deleteDoc(d.ref); }
+document.getElementById('winners').innerHTML='';
+alert('Winners list cleared. You can spin again using the same entries.');
 }
 
 window.pickWinner=async function(){
